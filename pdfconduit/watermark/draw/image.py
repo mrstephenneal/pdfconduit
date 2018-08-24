@@ -17,27 +17,30 @@ def img_opacity(image, opacity, tempdir=None, bw=True):
     :return:  Path to modified PNG
     """
     # Validate parameters
-    assert 0 <= opacity <= 1, 'Opacity must be a float between 0 and 1'
+    try:
+        assert 0 <= opacity < 1
+    except AssertionError:
+        return image
     assert os.path.isfile(image), 'Image is not a file'
 
     # Open image in RGBA mode if not already in RGBA
-    im = Image.open(image)
-    if im.mode != 'RGBA':
-        im = im.convert('RGBA')
-    else:
-        im = im.copy()
+    with Image.open(image) as im:
+        if im.mode != 'RGBA':
+            im = im.convert('RGBA')
+        else:
+            im = im.copy()
 
-    # Adjust opacity
-    alpha = im.split()[3]
-    alpha = ImageEnhance.Brightness(alpha).enhance(opacity)
-    im.putalpha(alpha)
-    if bw:
-        im.convert('L')
+        # Adjust opacity
+        alpha = im.split()[3]
+        alpha = ImageEnhance.Brightness(alpha).enhance(opacity)
+        im.putalpha(alpha)
+        if bw:
+            im.convert('L')
 
-    # Save modified image file
-    dst = NamedTemporaryFile(suffix='.png', dir=tempdir, delete=False)
-    im.save(dst)
-    return dst.name
+        # Save modified image file
+        dst = NamedTemporaryFile(suffix='.png', dir=tempdir, delete=False).name
+        im.save(dst)
+    return dst
 
 
 class DrawPIL:
@@ -110,11 +113,12 @@ class DrawPIL:
         # Create another new image
         rotated = Image.new('RGBA', self.img.size, color=(255, 255, 255, 0))
 
-        # Paste front into new image and set x offset equal to half the difference of front and mask size
+        # Paste front into new image and set x offset equal to half
+        # the difference of front and mask size
         rotated.paste(front, (0, y_margin))
         self.img = rotated
 
-    def save(self, destination=None, file_name='pil', img=None):
+    def save(self, img=None, destination=None, file_name='pil'):
         img = self.img if not img else img
         fn = file_name.strip('.png') if '.png' in file_name else file_name
         if self.tempdir:

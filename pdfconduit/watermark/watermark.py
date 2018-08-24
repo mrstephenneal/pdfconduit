@@ -12,7 +12,7 @@ from pdfconduit.watermark.canvas import CanvasConstructor
 
 class Watermark:
     def __init__(self, document, remove_temps=True, move_temps=None, open_file=True, tempdir=mkdtemp(), receipt=None,
-                 use_receipt=True):
+                 use_receipt=True, progress_bar_enabled=False, progress_bar='tqdm'):
         """
         Watermark and encrypt a PDF document.
 
@@ -40,6 +40,8 @@ class Watermark:
         self.move_temps = move_temps
         self.open_file = open_file
         self.tempdir = tempdir
+        self.progress_bar_enabled = progress_bar_enabled
+        self.progress_bar = progress_bar
 
         self.use_receipt = use_receipt
         if isinstance(receipt, Receipt):
@@ -113,7 +115,7 @@ class Watermark:
             self.add()
             return self.cleanup()
 
-    def add(self, document=None, watermark=None, underneath=False, output=None, suffix='watermarked'):
+    def add(self, document=None, watermark=None, underneath=False, output=None, suffix='watermarked', method='pdfrw'):
         """
         Add a watermark file to an existing PDF document.
 
@@ -130,6 +132,8 @@ class Watermark:
             Output file path
         :param suffix: str
             Suffix to append to existing PDF document file name
+        :param method: str
+            PDF library to be used for watermark adding
         :return: str
             Watermarked PDF Document full path
         """
@@ -139,13 +143,14 @@ class Watermark:
         if not document:
             document = self.document
         self.document = str(WatermarkAdd(document, watermark, output=output, underneath=underneath,
-                                         tempdir=self.tempdir, suffix=suffix))
+                                         tempdir=self.tempdir, suffix=suffix, method=method))
         self.receipt.add('Watermarked PDF', os.path.basename(self.document))
         if self.open_file:
             open_window(self.document)
         return self.document
 
-    def encrypt(self, user_pw='', owner_pw=None, encrypt_128=True, allow_printing=True, allow_commenting=False):
+    def encrypt(self, user_pw='', owner_pw=None, encrypt_128=True, allow_printing=True, allow_commenting=False,
+                document=None):
         """
         Encrypt a PDF document to add passwords and restrict permissions.
 
@@ -165,6 +170,7 @@ class Watermark:
         :return: str
             Encrypted PDF full path
         """
+        document = self.document if document is None else document
         self.receipt.add('User pw', user_pw)
         self.receipt.add('Owner pw', owner_pw)
         if encrypt_128:
@@ -175,7 +181,8 @@ class Watermark:
             self.receipt.add('Permissions', 'Allow printing')
         else:
             self.receipt.add('Permissions', 'Allow ALL')
-        p = str(Encrypt(self.document, user_pw, owner_pw, output=add_suffix(self.document_og, 'secured'),
-                        bit128=encrypt_128, allow_printing=allow_printing, allow_commenting=allow_commenting))
+        p = str(Encrypt(document, user_pw, owner_pw, output=add_suffix(self.document_og, 'secured'),
+                        bit128=encrypt_128, allow_printing=allow_printing, allow_commenting=allow_commenting,
+                        progress_bar_enabled=self.progress_bar_enabled, progress_bar=self.progress_bar))
         self.receipt.add('Secured PDF', os.path.basename(p))
         return p

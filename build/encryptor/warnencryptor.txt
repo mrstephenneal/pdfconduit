@@ -1,0 +1,54 @@
+missing module named resource - imported by posix, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named posix - imported by os, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named _posixsubprocess - imported by subprocess, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named org - imported by pickle, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named readline - imported by cmd, code, pdb, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+excluded module named _frozen_importlib - imported by importlib, importlib.abc, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named _frozen_importlib_external - imported by importlib._bootstrap, importlib, importlib.abc, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named _winreg - imported by platform, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named _scproxy - imported by urllib.request
+missing module named java - imported by platform, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named 'java.lang' - imported by platform, xml.sax._exceptions, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named vms_lib - imported by platform, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named termios - imported by tty, getpass, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named grp - imported by shutil, tarfile, pathlib, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named pwd - imported by posixpath, shutil, tarfile, http.server, webbrowser, netrc, getpass, pathlib, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named _dummy_threading - imported by dummy_threading, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named 'org.python' - imported by copy, xml.sax, C:\Users\Stephen\Scripts\pdfconduit\encryptor.py
+missing module named cStringIO - imported by PyPDF3.pdf, PyPDF3.filters, PyPDF3.merger, cPickle
+missing module named copy_reg - imported by cStringIO, cPickle
+missing module named md5 - imported by PyPDF3.pdf, reportlab.lib.utils
+missing module named sets - imported by PyPDF3.pdf, reportlab.platypus.doctemplate
+missing module named System - imported by PyPDF3.filters
+missing module named PIL._imagingagg - imported by PIL, PIL.ImageDraw
+missing module named numpy - imported by PIL.ImageFilter
+missing module named UserDict - imported by PIL.PdfParser
+missing module named Tkinter - imported by PIL.ImageTk
+missing module named olefile - imported by PIL.MicImagePlugin, PIL.FpxImagePlugin
+missing module named 'PySide.QtCore' - imported by PIL.ImageQt
+missing module named 'PyQt4.QtCore' - imported by PIL.ImageQt
+missing module named 'PyQt5.QtCore' - imported by PIL.ImageQt
+missing module named pathlib2 - imported by PIL.Image
+missing module named cffi - imported by PIL.Image, PIL.PyAccess, PIL.ImageTk
+missing module named __builtin__ - imported by reportlab.lib.utils, PIL.Image
+missing module named rlextra - imported by reportlab.lib.pdfencrypt
+missing module named pyphen - imported by reportlab.platypus.paragraph
+missing module named htmlentitydefs - imported by reportlab.platypus.paraparser
+missing module named HTMLParser - imported by reportlab.platypus.paraparser
+missing module named 'tests.test_platypus_tables' - imported by reportlab.platypus.tables
+missing module named reportlab_mods - imported by reportlab
+missing module named 'reportlab.local_rl_mods' - imported by reportlab
+missing module named future_builtins - imported by reportlab
+missing module named jarray - imported by reportlab.lib.utils
+missing module named 'javax.imageio' - imported by reportlab.lib.utils
+missing module named rl_config - imported by reportlab.lib.utils
+missing module named urllib2 - imported by reportlab.lib.utils
+missing module named 'reportlab.lib.pyHnj' - imported by reportlab.lib.utils
+missing module named Image - imported by reportlab.lib.utils
+missing module named 'java.awt' - imported by reportlab.lib.utils
+missing module named javax - imported by reportlab.lib.utils
+missing module named macostools - imported by reportlab.lib.utils
+missing module named macfs - imported by reportlab.lib.utils
+missing module named StringIO - imported by reportlab.lib.utils
+missing module named cPickle - imported by reportlab.lib.utils
+missing module named pyfribidi2 - imported by reportlab.pdfgen.textobject

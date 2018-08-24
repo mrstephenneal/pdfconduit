@@ -24,7 +24,7 @@ class CanvasConstructor:
 
     def canvas(self):
         self.obj.add(CanvasImg(os.path.join(IMAGE_DIRECTORY, self.image), opacity=self.opacity, x=0, y=153))
-        if copyright:
+        if self.copyright:
             self.obj.add(CanvasStr('© copyright ' + str(datetime.now().year), size=16, y=-10, opacity=self.opacity))
         if self.text2:
             self.obj.add(CanvasStr(self.text1, opacity=self.opacity, size=40, y=-110))

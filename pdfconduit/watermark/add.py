@@ -2,6 +2,7 @@
 from tempfile import NamedTemporaryFile
 from PyPDF3 import PdfFileReader, PdfFileWriter
 from PyPDF3.pdf import PageObject
+from pdfrw import PdfReader, PdfWriter, PageMerge
 from reportlab.lib.pagesizes import letter
 from pdfconduit.upscale import upscale
 from pdfconduit.rotate import rotate
@@ -10,7 +11,7 @@ from pdfconduit.utils import add_suffix, resource_path, Info
 
 class WatermarkAdd:
     def __init__(self, document, watermark, underneath=False, overwrite=False, output=None, suffix='watermarked',
-                 decrypt=False, tempdir=None):
+                 decrypt=False, tempdir=None, method='pdfrw'):
         """
         Add a watermark to an existing PDF document
 
@@ -36,6 +37,8 @@ class WatermarkAdd:
         self.scale = 0
         self.underneath = underneath
         self.tempdir = tempdir
+        self.method = method
+
         self.document_reader = self._document_reader(document, decrypt)
         self.document = self._get_document_info(document)
         self.watermark_file = self._get_watermark_info(self.document, watermark)
@@ -44,13 +47,12 @@ class WatermarkAdd:
         if overwrite:
             self.output_filename = document
         elif output:
-            if output == 'temp':
-                tmpf = NamedTemporaryFile(suffix='.pdf', dir=self.tempdir, delete=False)
-                self.output_filename = resource_path(tmpf.name)
-            else:
-                self.output_filename = output
-        else:
+            self.output_filename = output
+        elif suffix:
             self.output_filename = add_suffix(document, suffix)
+        else:
+            tmpf = NamedTemporaryFile(suffix='.pdf', dir=self.tempdir, delete=False)
+            self.output_filename = resource_path(tmpf.name)
 
         self.add(pdf_fname, wtrmrk_fname)
 
@@ -96,7 +98,7 @@ class WatermarkAdd:
         # 3b. Check if watermark file needs to be rotated
         if watermark_file['w'] > watermark_file['h'] and document['orientation'] is 'portrait':
             self.rotate = 90
-            watermark_file['rotated'] = rotate(watermark, self.rotate, tempdir=self.tempdir)
+            watermark_file['rotated'] = rotate(watermark, self.rotate, tempdir=self.tempdir, method=self.method)
 
         # Set watermark file to be used for upscaling
         try:
@@ -113,9 +115,7 @@ class WatermarkAdd:
             if watermark_file['h'] * scale > document['h']:
                 scale = float(document['h'] / watermark_file['h'])
 
-            if watermark_file['w'] * scale < document['w']:
-                margin_x = (document['w'] - watermark_file['w'] * scale) / 2
-            watermark_file['upscaled'] = upscale(wtrmrk, margin_x=margin_x, scale=scale, tempdir=self.tempdir)
+            watermark_file['upscaled'] = upscale(wtrmrk, scale=scale, tempdir=self.tempdir, method=self.method)
         self.scale = scale
         return watermark_file
 
@@ -142,36 +142,120 @@ class WatermarkAdd:
         # 5a. Create output PDF file name
         output_filename = self.output_filename
 
-        # 5b. Get our files ready
-        document_reader = PdfFileReader(document)
-        output_file = PdfFileWriter()
+        def pypdf3():
+            """Much slower than PyPDF3 method."""
+            # 5b. Get our files ready
+            document_reader = PdfFileReader(document)
+            output_file = PdfFileWriter()
 
-        # Number of pages in input document
-        page_count = document_reader.getNumPages()
+            # Number of pages in input document
+            page_count = document_reader.getNumPages()
 
-        # Watermark objects
-        watermark_reader = PdfFileReader(watermark)
-        wtrmrk_page = watermark_reader.getPage(0)
-        wtrmrk_width = (wtrmrk_page.mediaBox.getWidth() / 2) + 0
-        wtrmrk_height = (wtrmrk_page.mediaBox.getHeight() / 2) + 80
-        wtrmrk_rotate = Info(watermark_reader).rotate
+            # Watermark objects
+            watermark_reader = PdfFileReader(watermark)
+            wtrmrk_page = watermark_reader.getPage(0)
+            wtrmrk_width = (wtrmrk_page.mediaBox.getWidth() / 2) + 0
+            wtrmrk_height = (wtrmrk_page.mediaBox.getHeight() / 2) + 80
+            wtrmrk_rotate = -int(Info(watermark_reader).rotate) if Info(watermark_reader).rotate is not None else 0
 
-        # 5c. Go through all the input file pages to add a watermark to them
-        for page_number in range(page_count):
-            # Merge the watermark with the page
-            if not self.underneath:
-                input_page = document_reader.getPage(page_number)
-                input_page.mergeRotatedTranslatedPage(wtrmrk_page, -wtrmrk_rotate, wtrmrk_width, wtrmrk_height)
-            else:
-                size = Info(document_reader).dimensions
-                input_page = PageObject().createBlankPage(document_reader, size['w'], size['h'])
-                input_page.mergeRotatedTranslatedPage(wtrmrk_page, -wtrmrk_rotate, wtrmrk_width, wtrmrk_height)
-                input_page.mergePage(document_reader.getPage(page_number))
+            # 5c. Go through all the input file pages to add a watermark to them
+            for page_number in range(page_count):
+                # Merge the watermark with the page
+                if not self.underneath:
+                    input_page = document_reader.getPage(page_number)
+                    if wtrmrk_rotate is not 0:
+                        input_page.mergeRotatedTranslatedPage(wtrmrk_page, wtrmrk_rotate, wtrmrk_width, wtrmrk_height)
+                    else:
+                        wtrmrk_width = 0
+                        wtrmrk_height = 0
+                        input_page.mergeTranslatedPage(wtrmrk_page, wtrmrk_width, wtrmrk_height)
+                else:
+                    size = Info(document_reader).dimensions
+                    input_page = PageObject().createBlankPage(document_reader, size['w'], size['h'])
+                    if wtrmrk_rotate is not 0:
+                        input_page.mergeRotatedTranslatedPage(wtrmrk_page, wtrmrk_rotate, wtrmrk_width, wtrmrk_height)
+                    else:
+                        wtrmrk_width = 0
+                        wtrmrk_height = 0
+                        input_page.mergeTranslatedPage(wtrmrk_page, wtrmrk_width, wtrmrk_height)
+                    input_page.mergePage(document_reader.getPage(page_number))
 
-            # Add page from input file to output document
-            output_file.addPage(input_page)
+                # Add page from input file to output document
+                output_file.addPage(input_page)
 
-        # 5d. finally, write "output" to PDF
-        with open(output_filename, "wb") as outputStream:
-            output_file.write(outputStream)
-        return output_filename
+            # 5d. finally, write "output" to PDF
+            with open(output_filename, "wb") as outputStream:
+                output_file.write(outputStream)
+            return output_filename
+
+        def pdfrw():
+            """Faster than PyPDF3 method by as much as 15x."""
+            # TODO: Fix issue where watermark is improperly placed on large pagesize PDFs
+            # print(Info(document).size)
+            # print(Info(watermark).size)
+            # print('\n')
+
+            # Open both the source files
+            wmark_trailer = PdfReader(watermark)
+            trailer = PdfReader(document)
+
+            # Handle different sized pages in same document with
+            # a memoization cache, so we don't create more watermark
+            # objects than we need to (typically only one per document).
+
+            wmark_page = wmark_trailer.pages[0]
+            wmark_cache = {}
+
+            # Process every page
+            for pagenum, page in enumerate(trailer.pages, 1):
+
+                # Get the media box of the page, and see
+                # if we have a matching watermark in the cache
+                mbox = tuple(float(x) for x in page.MediaBox)
+                odd = pagenum & 1
+                key = mbox, odd
+                wmark = wmark_cache.get(key)
+                if wmark is None:
+
+                    # Create and cache a new watermark object.
+                    wmark = wmark_cache[key] = PageMerge().add(wmark_page)[0]
+
+                    # The math is more complete than it probably needs to be,
+                    # because the origin of all pages is almost always (0, 0).
+                    # Nonetheless, we illustrate all the values and their names.
+
+                    page_x, page_y, page_x1, page_y1 = mbox
+                    page_w = page_x1 - page_x
+                    page_h = page_y1 - page_y  # For illustration, not used
+
+                    # Scale the watermark if it is too wide for the page
+                    # (Could do the same for height instead if needed)
+                    if wmark.w > page_w:
+                        wmark.scale(1.0 * page_w / wmark.w)
+
+                    # Always put watermark at the top of the page
+                    # (but see horizontal positioning for other ideas)
+                    wmark.y += page_y1 - wmark.h
+
+                    # For odd pages, put it at the left of the page,
+                    # and for even pages, put it on the right of the page.
+                    if odd:
+                        wmark.x = page_x
+                    else:
+                        wmark.x += page_x1 - wmark.w
+
+                    # Optimize the case where the watermark is same width
+                    # as page.
+                    if page_w == wmark.w:
+                        wmark_cache[mbox, not odd] = wmark
+
+                # Add the watermark to the page
+                PageMerge(page).add(wmark, prepend=self.underneath).render()
+
+            # Write out the destination file
+            PdfWriter(output_filename, trailer=trailer).write()
+
+        if self.method is 'pypdf3':
+            return pypdf3()
+        else:
+            return pdfrw()

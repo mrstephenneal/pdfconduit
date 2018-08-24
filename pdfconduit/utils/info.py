@@ -35,6 +35,11 @@ class Info:
         return True if self.pdf.isEncrypted else False
 
     @property
+    def decrypted(self):
+        """Check weather a PDF is encrypted"""
+        return True if self.pdf.isDecrypted else False
+
+    @property
     def pages(self):
         """Retrieve PDF number of pages"""
         return self.pdf.getNumPages()

@@ -8,13 +8,24 @@ from pdfconduit.watermark.draw.image import img_opacity
 from pdfconduit.watermark.canvas import CanvasStr, CanvasImg
 
 
-def center_str(txt, font, size, offset=0):
-    text_width = stringWidth(txt, fontName=font, fontSize=size)
-    return -(text_width / 2.0) + offset
+def text_width(string, font_name, font_size):
+    """Determine with width in pixels of string."""
+    return stringWidth(string, fontName=font_name, fontSize=font_size)
+
+
+def center_str(txt, font_name, font_size, offset=0):
+    """Center a string on the x axis of a reportslab canvas"""
+    return -(text_width(txt, font_name, font_size) / 2.0) + offset
+
+
+def split_str(string):
+    """Split string in half to return two strings"""
+    split = string.split(' ')
+    return ' '.join(split[:len(split) // 2]), ' '.join(split[len(split) // 2:])
 
 
 class DrawPDF:
-    def __init__(self, tempdir=None, compress=0):
+    def __init__(self, tempdir=None, compress=0, pagesize=LETTER):
         if tempdir:
             self.dir = tempdir
         else:
@@ -24,7 +35,7 @@ class DrawPDF:
 
         # create a new PDF with Reportlab
         self.packet = io.BytesIO()
-        self.can = Canvas(self.packet, pagesize=LETTER, pageCompression=compress, bottomup=1)  # Initialize canvas
+        self.can = Canvas(self.packet, pagesize=pagesize, pageCompression=compress, bottomup=1)  # Initialize canvas
 
     def __str__(self):
         return str(self.dst)
@@ -39,8 +50,8 @@ class DrawPDF:
 
 
 class WatermarkDraw(DrawPDF):
-    def __init__(self, canvas_objects, rotate=0, compress=0, tempdir=None):
-        super(WatermarkDraw, self).__init__(tempdir, compress)
+    def __init__(self, canvas_objects, rotate=0, compress=0, pagesize=LETTER, tempdir=None):
+        super(WatermarkDraw, self).__init__(tempdir, compress, pagesize)
         self.canvas_objects = canvas_objects
         self.rotate = rotate
 
@@ -64,6 +75,7 @@ class WatermarkDraw(DrawPDF):
                 self._draw_string(obj)
             elif isinstance(obj, CanvasImg):
                 self._draw_image(obj)
+        self.can.showPage()
         self.can.save()
 
     def _draw_image(self, ci):
@@ -102,19 +114,27 @@ class WatermarkDraw(DrawPDF):
         # 4. X and Y positions
         # X and Y are both centered
         if cs.y_centered and cs.x_centered:
-            x = center_str(cs.string, cs.font, cs.size, offset=0)
-            y = ((LETTER[1]) / 2)
+            # Check if text_width is greater than the canvas page width
+            if text_width(cs.string, cs.font, cs.size) > self.can._pagesize[0]:
+                str1, str2 = split_str(cs.string)
+                self.can.drawString(x=center_str(str1, cs.font, cs.size, offset=0), y=cs.size, text=str1)
+                self.can.drawString(x=center_str(str2, cs.font, cs.size, offset=0), y=-cs.size, text=str2)
+                return
+            else:
+                x = center_str(cs.string, cs.font, cs.size, offset=0)
+                y = 0
 
         # Y is centered and X is not
         elif cs.y_centered and not cs.x_centered:
             x = cs.x
-            y = ((LETTER[1]) / 2)
+            y = 0
 
         # X is centered and Y is not
         elif cs.x_centered and not cs.y_centered:
-            x = center_str(cs.string, cs.font, cs.size)
+            x = center_str(cs.string, cs.font, cs.size, offset=0)
             y = cs.y
         else:
             x = cs.x
             y = cs.y
         self.can.drawString(x=x, y=y, text=cs.string)
+        return

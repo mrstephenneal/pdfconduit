@@ -1,0 +1,58 @@
+﻿Version 1.2.4, 2018-08-24
+--------------------------
+ - Fixed issue where watermarker.py would exit with a warning on windows
+ - Identified merge.py as a possible cause of UnclosedResource warnings
+ - Improved test_merge.py test suite
+
+
+Version 1.2.3, 2018-08-23
+--------------------------
+ - Added tabs to watermark GUI form
+    - Only on Windows (PySimpleGUI tabs are currently ugly on MacOS)
+ - Console no longer appears when watermarker.exe is launched
+
+
+Version 1.2.2, 2018-08-23
+--------------------------
+ - Fixed issue when text from Label class was too big
+ - Added flat method to samples.py
+ - Created function to calculate font size in Label class
+
+
+Version 1.2.1, 2018-08-23
+--------------------------
+ - Fixed issue in add.py where upscale call was giving unneeded margin_x param
+ - Added assertion to slice.py to validate page_range
+ - Moved target_w and target_h params to __init__ method of upscale.py
+ - Removed redundant tests from test_upscale_pypdf3.py
+ - Added PDF dimensions print statements to test_upscale tearDown methods
+ - Added Flat vs. Layered PDF generator to samples.py
+
+
+Version 1.2.0, 2018-08-22
+--------------------------
+ - Added PyMuPDF and tqdm to install_requires
+    - PyMuPDF is a dependency of the flatten module
+    - tqdm is a dependency of several time intensive modules
+ - Created flatten module to convert PDF page contents to singular flat layer
+ - Added flatten.py file
+    - Convert PDF file into PNG file for each page
+    - Convert images into multiple PDFs or a single merged PDF
+ - Added flatten parameter to watermarker GUI
+
+
+Version 1.1.6, 2018-08-21
+--------------------------
+ - Fixed issue large PDF files issue
+    - Files taking a long time to write
+    - File size was too large
+ - Added progress bar parameters to Encrypt module
+ - Restored pdfrw methods to upscale, rotate and add because of speed
+   limitations with PyPDF3
+ - Added pdf2img.py to convert PDF files to image files
+
+
+Version 1.1.5, 2018-08-20
+--------------------------
+ - Fixed test suite and added unit testing modules
+ - Fixed Label class x and y calculations

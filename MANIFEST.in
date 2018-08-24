@@ -1,2 +1,2 @@
-include pdfwatermarker/watermark/lib/watermark.pdf
-include pdfwatermarker/watermark/lib/Vera.ttf
+include pdfconduit/utils/lib/font/*
+include pdfconduit/utils/lib/img/*

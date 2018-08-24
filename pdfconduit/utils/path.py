@@ -25,19 +25,21 @@ def resource_path(relative):
 
 
 if 'pathlib' in sys.modules:
-    def _add_suffix(file_path, suffix, sep):
+    def _add_suffix(file_path, suffix, sep, ext):
         p = Path(file_path)
-        out = p.stem + sep + suffix + p.suffix  # p.suffix is file extension
+        _ext = p.suffix if ext is None else str('.' + ext.strip('.'))
+        out = p.stem + sep + suffix + _ext  # p.suffix is file extension
         return os.path.join(os.path.dirname(file_path), out)
 else:
-    def _add_suffix(file_path, suffix, sep):
+    def _add_suffix(file_path, suffix, sep, ext):
         split = os.path.basename(file_path).rsplit('.', 1)
-        return os.path.join(os.path.dirname(file_path), split[0] + sep + suffix + '.' + split[1])
+        ext = split[1] if ext is None else ext
+        return os.path.join(os.path.dirname(file_path), split[0] + sep + suffix + '.' + ext)
 
 
-def add_suffix(file_path, suffix='modified', sep='_'):
+def add_suffix(file_path, suffix='modified', sep='_', ext=None):
     """Adds suffix to a file name seperated by an underscore and returns file path."""
-    return _add_suffix(file_path, suffix, sep)
+    return _add_suffix(file_path, suffix, sep, ext)
 
 
 def set_destination(source, suffix, filename=False, ext=None):

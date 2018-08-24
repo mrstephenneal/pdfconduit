@@ -4,17 +4,20 @@ from PyPDF3 import PdfFileReader, PdfFileWriter
 
 
 class Encrypt:
-    def __init__(self, pdf, user_pw, owner_pw=None, output=None, bit128=True, allow_printing=True,
-                 allow_commenting=False, overwrite_permission=None):
+    def __init__(self, pdf, user_pw, owner_pw=None, output=None, suffix='secured', bit128=True, allow_printing=True,
+                 allow_commenting=False, overwrite_permission=None, progress_bar_enabled=False, progress_bar='gui'):
         """Password protect PDF file and allow all other permissions."""
         self.pdf = pdf
         self.user_pw = user_pw
         self.owner_pw = owner_pw
-        self.output = add_suffix(pdf, 'secured') if not output else output
+        self.output = add_suffix(pdf, suffix=suffix) if not output else output
         self.encrypt_128 = bit128
         self.allow_printing = allow_printing
         self.allow_commenting = allow_commenting
         self.overwrite_permission = overwrite_permission
+        self.progress_bar_enabled = progress_bar_enabled
+        self.progress_bar = progress_bar
+
         self.encrypt()
 
     def __str__(self):
@@ -45,8 +48,10 @@ class Encrypt:
 
             # Write encrypted PDF to file
             with open(self.output, 'wb') as output_pdf:
-                pdf_writer.write(output_pdf)
-            return self.output
+                # pdf_writer.write(output_pdf, progress_bar='gui')
+                pdf_writer.write(output_pdf, progress_bar=self.progress_bar,
+                                 progress_bar_enabled=self.progress_bar_enabled)
+        return self.output
 
 
 def main():
